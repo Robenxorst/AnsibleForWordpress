@@ -1,0 +1,3 @@
+proxy: http://127.0.0.1:8080
+dns_name_Debian: vm2.sth58.srequest.ru
+dns_name_RedHat: vm3.sth58.srequest.ru

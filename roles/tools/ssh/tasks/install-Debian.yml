@@ -1,0 +1,40 @@
+---
+- name: Task ping
+  ping:
+
+- name: install packages
+  apt:
+    name: "{{ packages }}"
+    state: latest
+    update_cache: yes
+  vars:
+    packages:
+    - openssh-server
+    - openssh-clients
+    - vim
+
+- name: Set authorized key took from file
+  authorized_key:
+    user: "{{ ansible_user }}"
+    state: present
+    key: "{{ lookup('file', '/home/robenxorst/.ssh/id_rsa.pub') }}"
+
+- name: Change sshd_config
+  ansible.builtin.replace:
+    path: /etc/ssh/sshd_config
+    regexp: '{{ item }} yes'
+    replace: '{{ item }} no'
+  loop:
+    - PasswordAuthentication
+    - PermitRootLogin
+
+- name: restart sshd
+  ansible.builtin.shell:
+    cmd: systemctl restart sshd
+
+- name: check if sshd is started and enabled on boot
+  systemd:
+    daemon_reload: yes
+    name: sshd
+    enabled: yes
+    state: started

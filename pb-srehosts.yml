@@ -1,0 +1,12 @@
+---
+- name: "sre quest hosts"
+  hosts: prodaction
+  become: true
+  roles:
+    - {role: 'tools/proxy', tags: proxy}
+    - {role: 'tools/ssh', tags: ssh}
+    - {role: 'tools/nginx', tags: nginx}
+    - {role: 'tools/php', tags: php}
+    - {role: 'stores/mysql', tags: mysql}
+    - {role: 'tools/wordpress', tags: wordpress}
+    - {role: 'monitoring/node_exporter', tags: node_exporter}

@@ -1,0 +1,25 @@
+---
+- name: install nginx
+  apt:
+    name: nginx
+    state: latest
+
+- name: set nginx available config
+  template:
+    src: templates/nginx_default.j2
+    dest: /etc/nginx/sites-available/default
+
+- name: create nginx link
+  file:
+    src: /etc/nginx/sites-available/default
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+  notify:
+   - restart nginx
+  
+- name: check if nginx is started and enabled on boot
+  systemd:
+    daemon_reload: yes
+    name: nginx
+    enabled: yes
+    state: started

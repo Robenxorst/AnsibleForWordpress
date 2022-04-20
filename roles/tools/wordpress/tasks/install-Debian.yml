@@ -1,0 +1,82 @@
+---
+- name: install packages
+  apt:
+    name: "{{ packages }}"
+    state: latest
+    update_cache: yes
+  vars:
+    packages:
+    - apache2
+    - apache2-utils
+    - php7.4
+    - php7.4-mysql
+    - libapache2-mod-php7.4
+    - php7.4-cli
+    - php7.4-cgi
+    - php7.4-gd
+
+- name: download wordpress
+  ansible.builtin.shell:
+    cmd: wget -c https://wordpress.org/latest.tar.gz
+
+- name: move wordpress
+  ansible.builtin.shell:
+    cmd: mv latest.tar.gz /tmp/
+
+- name: extract wordpress
+  unarchive:
+    src: /tmp/latest.tar.gz
+    dest: /tmp
+    owner: www-data
+    group: www-data
+    mode: 0755
+    copy: no
+
+- name: Delete apache blocker
+  file:
+    path: /var/www/html/index.html
+    state: absent
+  ignore_errors: yes
+
+- name: Delete directory in html
+  file:
+    state: absent
+    path: /var/www/html/{{ item }}
+  loop:
+    - wp-admin        
+    - wp-includes              
+    - wp-content
+
+- name: Move wordpress files
+  ansible.builtin.shell:
+   cmd: mv /tmp/wordpress/* /var/www/html/
+
+- name: Change html ownership, group and permissions
+  ansible.builtin.file:
+    path: /var/www/html/
+    owner: www-data
+    group: www-data
+    mode: 0755
+
+- name: set wordpress config
+  template:
+    src: wp-config.php.j2
+    dest: /var/www/html/wp-config.php
+
+- name: set apache2 ports.conf
+  template:
+    src: templates/my_ports.conf.j2
+    dest: /etc/apache2/ports.conf
+
+- name: set apache2 available config
+  template:
+    src: templates/000-default.conf.j2
+    dest: /etc/apache2/sites-available/000-default.conf
+
+- name: create apache2 link
+  file:
+    state: link
+    src: /etc/apache2/sites-available/000-default.conf
+    dest: /etc/apache2/sites-enabled/000-default.conf
+  notify:
+   - restart apache2

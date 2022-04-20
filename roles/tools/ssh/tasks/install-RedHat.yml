@@ -1,0 +1,33 @@
+---
+
+- name: Install openssh-server
+  yum:
+    name: openssh-server
+    state: present
+
+  
+- name: Set authorized key took from file
+  authorized_key:
+    user: "{{ ansible_user }}"
+    state: present
+    key: "{{ lookup('file', '/home/robenxorst/.ssh/id_rsa.pub') }}"
+
+- name: Change sshd_config
+  ansible.builtin.replace:
+    path: /etc/ssh/sshd_config
+    regexp: '{{ item }} yes'
+    replace: '{{ item }} no'
+  loop:
+    - PasswordAuthentication
+    - PermitRootLogin
+
+- name: Restart sshd
+  ansible.builtin.shell:
+    cmd: systemctl restart sshd
+
+- name: Check if sshd is started and enabled on boot
+  systemd:
+    daemon_reload: yes
+    name: sshd
+    enabled: yes
+    state: started

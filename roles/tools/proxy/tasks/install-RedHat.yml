@@ -1,0 +1,41 @@
+---
+- name: Task ping
+  ping:
+
+- name: Yum proxy
+  lineinfile:
+    path: "/etc/yum.conf"
+    line: 'proxy={{proxy_ip}}'
+
+- name: Install utils
+  dnf:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - tree
+    - vim
+    - wget
+    - tar
+    - tcpdump
+    - net-tools
+
+- name: Add wget proxy
+  ansible.builtin.lineinfile:
+    path: "/etc/wgetrc"
+    line: "{{ item }} = http://10.115.58.1:8080/"
+  loop:
+    - http_proxy
+    - https_proxy
+
+- name: Add wget line
+  ansible.builtin.lineinfile:
+    path: "/etc/wgetrc"
+    line: "use_proxy=on"
+
+- name: Update yum files
+  ansible.builtin.shell:
+   cmd: yum update -y
+
+- name: Update dnf files
+  ansible.builtin.shell:
+   cmd: dnf update -y

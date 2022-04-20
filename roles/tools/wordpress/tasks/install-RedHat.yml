@@ -1,0 +1,35 @@
+---
+- name: download wordpress
+  ansible.builtin.shell:
+    cmd: wget -c https://wordpress.org/latest.tar.gz
+
+- name: extract wordpress into tmp
+  unarchive:
+    src: latest.tar.gz
+    dest: /tmp
+    owner: nginx
+    group: nginx
+    copy: no
+# ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Check wordpress files and delete
+  file:
+    path: /var/www/wordpress
+    state: absent
+  ignore_errors: yes
+
+- name: Move wordpress files
+  ansible.builtin.shell:
+    cmd: mv /tmp/wordpress /var/www/
+
+- name: Create wp-config.php
+  template:
+    src: templates/wp-config.php.j2
+    dest: /var/www/wordpress/wp-config.php
+    owner: nginx
+    group: nginx
+    mode: u=rw,g=r,o=r
+
+- name: Reload nginx
+  ansible.builtin.shell:
+    cmd: systemctl reload nginx

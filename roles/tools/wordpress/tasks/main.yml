@@ -1,0 +1,11 @@
+---
+- name: Register Files wp
+  stat:
+    path: /var/www/html/wp-load.php
+  register: stat_result
+
+- include_tasks: install-Debian.yml
+  when: ansible_os_family == 'Debian' and stat_result.stat.exists == 0
+
+- include_tasks: install-RedHat.yml
+  when: ansible_os_family == 'RedHat'

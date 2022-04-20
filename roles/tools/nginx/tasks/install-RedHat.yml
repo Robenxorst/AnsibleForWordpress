@@ -1,0 +1,46 @@
+---
+- name: Install nginx
+  dnf:
+    name: '@nginx:1.18'
+    state: present
+
+- name: Disable selinux now
+  ansible.builtin.shell:
+    cmd: setenforce 0
+  ignore_errors: yes
+
+- name: Disable selinux
+  ansible.builtin.replace:
+    path: /etc/selinux/config
+    regexp: 'SELINUX=enforcing'
+    replace: 'SELINUX=disabled'
+
+- name: Create nginx config
+  template:
+    src: nginx.conf.j2
+    dest: /tmp/nginx.conf
+
+- name: Delete old nginx config
+  file:
+    path: /etc/nginx/nginx.conf
+    state: absent
+
+- name: Move nginx config
+  ansible.builtin.shell:
+    cmd: mv /tmp/nginx.conf /etc/nginx/
+
+- name: Restart nginx
+  ansible.builtin.shell:
+    cmd: systemctl restart nginx
+
+- name: Check if nginx is started and enabled on boot
+  systemd:
+    daemon_reload: yes
+    name: nginx
+    enabled: yes
+    state: started
+
+- name: Stop firewalld
+  ansible.builtin.shell:
+    cmd: systemctl stop firewalld
+  ignore_errors: yes

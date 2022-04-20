@@ -1,0 +1,30 @@
+---
+- name: Task ping
+  ping: 
+
+- name: Create apt conf
+  template:
+    src: templates/apt.conf
+    dest: /etc/apt/apt.conf
+
+- name: Update apt files
+  ansible.builtin.shell:
+   cmd: apt update -y
+
+- name: Install the latest version of wget
+  yum:
+    name: wget
+    state: latest
+
+- name: Add wget proxy
+  ansible.builtin.lineinfile:
+    path: "/etc/wgetrc"
+    line: "{{ item }} = http://10.115.58.1:8080/"
+  loop:
+    - http_proxy
+    - https_proxy
+
+- name: Add wget line
+  ansible.builtin.lineinfile:
+    path: "/etc/wgetrc"
+    line: "use_proxy=on"
